@@ -13,11 +13,23 @@ st.header("📂 Batch Prediction")
 
 uploaded_file = st.file_uploader("Upload CSV for batch prediction", type=["csv"])
 if uploaded_file is not None:
-    df_test = pd.read_csv(uploaded_file)
+    df_og = pd.read_csv(uploaded_file)
+    df_test = df_og.copy()
+
+    df_test = df_test.fillna({
+    "Gender": "Male",
+    "Married": "Yes",
+    "Dependents": 0,
+    "Self_Employed": "No",
+    "LoanAmount": df_test["LoanAmount"].median(),
+    "Loan_Amount_Term": 360,
+    "Credit_History": 0
+    })
 
     df_test["Gender"] = df_test["Gender"].map({"Male":1, "Female":0})
     df_test["Married"] = df_test["Married"].map({"Yes":1, "No":0})
-    df_test["Dependents"] = df_test["Dependents"].replace("3+", 3).astype(int)
+    df_test["Dependents"] = df_test["Dependents"].replace("3+", 3)
+    df_test["Dependents"] = df_test["Dependents"].fillna(df_test["Dependents"].mode()[0]).astype(int)
     df_test["Education"] = df_test["Education"].map({"Not Graduate":1, "Graduate":0})
     df_test["Self_Employed"] = df_test["Self_Employed"].map({"Yes":1, "No":0})
     df_test["Credit_History"] = df_test["Credit_History"].fillna(0)
@@ -37,14 +49,14 @@ if uploaded_file is not None:
 
     preds = model.predict(df_scaled)
 
-    df_test["Prediction"] = preds.map({1: "Approved", 0: "Rejected"})
+    df_og["Prediction"] = pd.Series(preds).map({1: "Approved", 0: "Rejected"})
 
-    st.write(df_test)
+    st.write(df_og)
     
     st.write("Download Here 🔽")
     st.download_button(
         "Download Results",
-        df_test.to_csv(index=False),
+        df_og.to_csv(index=False),
         file_name="loan_predictions.csv"
     )
 
@@ -57,10 +69,11 @@ married = st.selectbox("Married", ["Yes", "No"])
 dependents = st.selectbox("Dependents", ["0", "1", "2", "3+"])
 education = st.selectbox("Education", ["Graduate", "Not Graduate"])
 self_employed = st.selectbox("Self Employed", ["Yes", "No"])
-Applicantincome = st.number_input("Applicant Income",value=0)
-co_income= st.number_input("CoApplicant Income",value=0)
+Applicantincome = st.number_input("Applicant Income (Monthly)",value=0)
+co_income= st.number_input("CoApplicant Income (Monthly)",value=0)
 loan_amount = st.number_input("Loan Amount (In Thousands)",value=0)
-loan_term = st.number_input("Loan Amount Term",value=0)
+loan_term = st.number_input("Loan Amount Term (No. of Months)",value=0)
+st.caption("Note: Loan amount is in thousands (e.g., 150 = ₹1,50,000)")
 credit_history = st.selectbox("Credit History", ["Good", "Bad"])
 property_area = st.selectbox("Property Area", ["Urban", "Semiurban", "Rural"])
 
