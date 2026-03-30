@@ -16,7 +16,7 @@ A machine learning web application that predicts whether a loan application will
 
 \## 🚀 Live Demo
 
-
+https://loan-approval-predictor-by-pushkar.streamlit.app/
 
 
 
